@@ -16,10 +16,10 @@ class Settings(BaseSettings):
         case_sensitive=False,
     )
 
-    # Database
-    database_url: str = Field(
-        default="postgresql+asyncpg://alphapm:alphapm@localhost:5432/alphapm",
-        description="PostgreSQL connection string",
+    # MongoDB
+    mongodb_uri: str = Field(
+        default="mongodb://localhost:27017/alphapm",
+        description="MongoDB connection string (use MongoDB Atlas URI for production)",
     )
 
     # Redis
@@ -53,16 +53,6 @@ class Settings(BaseSettings):
     )
     ai_daily_budget: float = Field(default=20.0, description="Daily AI budget in dollars")
 
-    # Telegram
-    telegram_bot_token: SecretStr | None = Field(
-        default=None,
-        description="Telegram bot token",
-    )
-    telegram_chat_id: str | None = Field(
-        default=None,
-        description="Telegram chat ID for alerts",
-    )
-
     # Risk Management
     max_daily_loss_pct: float = Field(
         default=5.0,
@@ -92,7 +82,21 @@ class Settings(BaseSettings):
         default=None,
         description="Comma-separated trader addresses",
     )
-    copy_trade_multiplier: float = Field(default=1.0)
+    copy_trade_multiplier: float = Field(default=0.5)
+    copy_min_trade_size: float = Field(
+        default=10.0,
+        description="Minimum trade size to copy in USD",
+    )
+
+    # Operational
+    polling_interval_seconds: int = Field(
+        default=30,
+        description="How often to check for trading opportunities",
+    )
+    environment: Literal["development", "staging", "production"] = Field(
+        default="development",
+        description="Application environment",
+    )
 
     # Logging
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = Field(default="INFO")
