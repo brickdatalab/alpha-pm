@@ -1,0 +1,15 @@
+# Development override - use with: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  postgres:
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  # Don't run trading engine in dev - run locally instead
+  trading:
+    profiles:
+      - production

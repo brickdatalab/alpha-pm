@@ -1,0 +1,67 @@
+services:
+  trading:
+    build: .
+    container_name: alpha-pm-trading
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://alphapm:alphapm@postgres:5432/alphapm
+      - REDIS_URL=redis://redis:6379/0
+      - LOG_LEVEL=INFO
+    env_file:
+      - .env
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - alpha-pm-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8080/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: alpha-pm-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=alphapm
+      - POSTGRES_PASSWORD=alphapm
+      - POSTGRES_DB=alphapm
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - alpha-pm-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U alphapm -d alphapm"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: alpha-pm-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - alpha-pm-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  alpha-pm-network:
+    driver: bridge
